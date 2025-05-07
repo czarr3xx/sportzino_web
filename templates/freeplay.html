@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Sportzino Freeplay{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes glow {
+        from {
+            box-shadow: 0 0 10px #0ff;
+        }
+        to {
+            box-shadow: 0 0 25px #0ff, 0 0 40px #0ff;
+        }
+    }
+
+    .logo-glow {
+        width: 180px;
+        border-radius: 20px;
+        animation: glow 2s ease-in-out infinite alternate;
+        filter: drop-shadow(0 0 10px #0ff);
+    }
+
+    .neon-btn {
+        background: linear-gradient(90deg, #00ffe0, #00ff8c);
+        color: black;
+        font-weight: bold;
+        transition: all 0.4s ease;
+        box-shadow: 0 0 10px #00ffe0, 0 0 20px #00ff8c;
+    }
+
+    .neon-btn:hover {
+        transform: scale(1.05);
+        background: linear-gradient(90deg, #00ff8c, #00ffe0);
+        box-shadow: 0 0 20px #00ffe0, 0 0 30px #00ff8c;
+    }
+
+    .code-box {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #0ff;
+        text-shadow: 0 0 6px #0ff;
+    }
+
+    .referral-form {
+        background: rgba(0, 0, 0, 0.5);
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 0 20px rgba(0, 255, 200, 0.3);
+    }
+</style>
+
+<audio autoplay loop hidden>
+    <source src="{{ url_for('static', filename='audio/background.mp3') }}" type="audio/mpeg">
+</audio>
+
+<div class="max-w-xl mx-auto text-center px-4 mt-10 space-y-6">
+    <img src="{{ url_for('static', filename='images/20250324_205248.jpg') }}" alt="Sportzino Logo" class="logo-glow mx-auto">
+
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-cyan-400">
+        Welcome to Sportzino Freeplay
+    </h1>
+
+    <div class="referral-form">
+        <form method="POST" action="{{ url_for('freeplay') }}" class="space-y-4">
+            <input
+                type="text"
+                name="referral_code"
+                placeholder="Enter referral code"
+                class="w-full px-4 py-3 rounded-lg border border-cyan-500 bg-gray-900 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+            >
+            <button type="submit" class="w-full py-3 rounded-lg neon-btn text-lg">
+                Generate My Referral Code
+            </button>
+        </form>
+
+        {% if code %}
+        <div class="code-box mt-4">
+            Your referral code: <span>{{ code }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <p class="text-gray-400 text-sm">No referral code? Leave it blank and join the fun!</p>
+</div>
+{% endblock %}

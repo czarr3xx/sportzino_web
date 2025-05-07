@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome - Sportzino</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script>
+    window.onload = function () {
+      confetti({
+        particleCount: 200,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ['#facc15', '#f59e0b', '#10b981'],
+      });
+    };
+  </script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+  <div class="text-center space-y-6 p-6 bg-gray-800 rounded-xl shadow-2xl max-w-lg">
+    <h1 class="text-4xl font-bold text-yellow-400 drop-shadow-md">🎉 Registration Complete!</h1>
+    <p class="text-lg text-gray-300">
+      Welcome <span class="text-yellow-300 font-semibold">{{ referral.full_name }}</span>!<br>
+      You’re now verified. Welcome to <span class="font-semibold text-yellow-300">Sportzino</span>!
+    </p>
+
+    <div class="bg-gray-900 text-yellow-400 text-xl font-mono px-6 py-4 border border-yellow-500 rounded shadow-inner">
+        Referral Code: <span class="font-bold">{{ referral.referral_code }}</span>
+    </div>
+
+    {% if referral.image_filename %}
+      <img src="{{ url_for('static', filename='uploads/' + referral.image_filename) }}" alt="Your Upload" class="w-24 h-24 mx-auto rounded-full ring-4 ring-yellow-400 shadow-lg">
+    {% else %}
+      <img src="{{ url_for('static', filename='images/FB_IMG_1744817280645.jpg') }}" alt="Default Icon" class="w-24 h-24 mx-auto rounded-full ring-4 ring-yellow-400 shadow-lg">
+    {% endif %}
+
+    <p class="text-sm text-gray-400">
+      You’ve referred <span class="text-white">{{ referral_count }}</span> out of 
+      <span class="text-white">{{ referral_goal }}</span> people.
+    </p>
+
+    <a href="/dashboard" class="inline-block bg-yellow-500 text-black px-6 py-3 rounded-lg font-semibold hover:bg-yellow-600 transition shadow-lg">
+      Go to Dashboard
+    </a>
+  </div>
+</body>
+</html>

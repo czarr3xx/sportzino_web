@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - KYC Submissions</title>
+</head>
+<body>
+    <h1>Admin - View KYC Submissions</h1>
+    <table border="1">
+        <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Country</th>
+            <th>Wallet Address</th>
+            <th>ID Card</th>
+            <th>SSN</th>
+        </tr>
+        {% for submission in submissions %}
+            <tr>
+                <td>{{ submission[1] }}</td>
+                <td>{{ submission[2] }}</td>
+                <td>{{ submission[3] }}</td>
+                <td>{{ submission[4] }}</td>
+                <td>{{ submission[5] }}</td>
+                <td><a href="{{ submission[6] }}">View ID</a></td>
+                <td>{{ submission[7] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
