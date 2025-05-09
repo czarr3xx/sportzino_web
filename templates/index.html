@@ -50,7 +50,7 @@
     <ol class="list-decimal list-inside space-y-2">
       {% for person in leaderboard %}
       <li class="flex items-center gap-2">
-        <img src="{{ url_for('static', filename='flags/' + person.country + '.svg') }}" alt="flag" class="w-5 h-5">
+        <img src="{{ url_for('static', filename='flags/' + person.country + '.svg') }}" alt="Flag of {{ person.country }}" class="w-5 h-5">
         <span class="text-white font-semibold">{{ person.name }}</span> – ${{ person.amount }} earned
       </li>
       {% endfor %}
@@ -88,7 +88,7 @@
       <li>Tap the <strong>Banking</strong> tab on the home screen.</li>
       <li>Select <strong>Paper Money</strong>.</li>
       <li>Use the map to find a nearby participating retailer (e.g., 7-Eleven, Walgreens, Walmart, CVS).</li>
-      <li>Tap <strong>Show Barcode</strong> to generate your unique deposit barcode Contact Admin. </li>
+      <li>Tap <strong>Show Barcode</strong> to generate your unique deposit barcode Contact Admin.</li>
       <li>Visit the selected store and inform the cashier that you'd like to deposit cash into your Cash App account.</li>
       <li>Present the barcode for scanning and hand over the cash amount you wish to deposit.</li>
       <li>Confirm the transaction and keep the receipt provided by the cashier.</li>
@@ -119,9 +119,14 @@
     function copyReferral() {
       const copyText = document.getElementById("referralLink");
       copyText.select();
-      copyText.setSelectionRange(0, 99999);
+      copyText.setSelectionRange(0, 99999); // For mobile devices
       document.execCommand("copy");
       alert("Copied: " + copyText.value);
+      
+      // Button feedback
+      const btn = document.querySelector("button");
+      btn.textContent = "Link Copied!";
+      setTimeout(() => btn.textContent = "Copy Referral Link", 2000);
     }
 
     document.querySelector("form").addEventListener("submit", () => {
