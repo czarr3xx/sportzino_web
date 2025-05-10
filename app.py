@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, render_template, redirect, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from flask_cors import CORS
@@ -65,6 +65,24 @@ class KYCSubmission(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Routes for rendering templates
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/register')
+def register():
+    return render_template('register.html')
+
+@app.route('/freeplay')
+@login_required
+def freeplay():
+    return render_template('freeplay.html')
+
 # Public API Routes
 @app.route('/api/user-info', methods=['GET'])
 @login_required
@@ -83,7 +101,7 @@ def get_leaderboard():
     return jsonify({"leaderboard": data})
 
 @app.route('/api/freeplay', methods=['POST'])
-def freeplay():
+def freeplay_api():
     data = request.get_json() or {}
     code = data.get('referral_code')
     if not code:
@@ -172,6 +190,15 @@ def paypal_pay():
 @app.route('/api/chime-pay', methods=['POST'])
 def chime_pay():
     return jsonify({"message": "Transfer manually to Chime Bank."}), 200
+
+# Error Handlers
+@app.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return render_template('500.html'), 500
 
 # Run the app
 if __name__ == '__main__':
