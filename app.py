@@ -8,6 +8,7 @@ import stripe
 import paypalrestsdk
 from io import StringIO
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Load environment variables
 load_dotenv()
@@ -40,6 +41,15 @@ class User(db.Model, UserMixin):
     referral_code = db.Column(db.String(50), unique=True)
     referrer_code = db.Column(db.String(50))
     balance = db.Column(db.Float, default=0.0)
+    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())  # Added for timestamp
+
+    def set_password(self, password):
+        """Hashes the user's password."""
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Checks if the provided password matches the hashed password."""
+        return check_password_hash(self.password, password)
 
 class KYCSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -67,7 +77,7 @@ def user_info():
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
     data = [
-        {"country": "US", "name": "John Doe", "amount": 120.50},
+        {"country": "US", "name": "Micheal Sawyer", "amount": 120.50},
         {"country": "US", "name": "Jane Smith", "amount": 100.25},
     ]
     return jsonify({"leaderboard": data})
@@ -143,8 +153,8 @@ def create_checkout_session():
                 'quantity': 1
             }],
             mode='payment',
-            success_url='https://sportzino.com/',
-            cancel_url='https://sportzino.com/'
+            success_url='https://sportzino.com/success',  # Ensure proper URL for success
+            cancel_url='https://sportzino.com/cancel'   # Ensure proper URL for cancel
         )
         return jsonify({"url": sess.url}), 200
     except Exception as e:
@@ -166,5 +176,5 @@ def chime_pay():
 # Run the app
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()  # Create database tables
+        db.create_all()  # Create database tables (For production, use migrations)
     app.run(debug=True)
