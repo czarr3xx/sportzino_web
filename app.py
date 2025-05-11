@@ -9,6 +9,7 @@ import paypalrestsdk
 from io import StringIO
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
+from waitress import serve
 
 # Load environment variables
 load_dotenv()
@@ -200,8 +201,11 @@ def page_not_found(error):
 def internal_server_error(error):
     return render_template('500.html'), 500
 
-# Run the app
-if __name__ == '__main__':
+# Run the app using Waitress or Flask's built-in server based on the environment
+if __name__ == "__main__":
     with app.app_context():
         db.create_all()  # Create database tables (For production, use migrations)
-    app.run(debug=True)
+    if os.getenv('FLASK_ENV') == 'production':
+        serve(app, host='0.0.0.0', port=5000)  # Run with Waitress for production
+    else:
+        app.run(debug=True)  # Run with Flask's built-in server for development

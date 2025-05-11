@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Sportzino Freeplay{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes glow {
+        from {
+            box-shadow: 0 0 10px #0ff;
+        }
+        to {
+            box-shadow: 0 0 25px #0ff, 0 0 40px #0ff;
+        }
+    }
+
+    .logo-glow {
+        width: 180px;
+        margin-bottom: 20px;
+        border-radius: 20px;
+        animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    .referral-form {
+        background-color: rgba(255, 255, 255, 0.05);
+        padding: 30px;
+        border-radius: 16px;
+        max-width: 500px;
+        margin: 30px auto;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+    }
+
+    .code-box {
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #0ff;
+    }
+</style>
+
+<!-- Background Music -->
+<audio autoplay loop hidden>
+    <source src="{{ url_for('static', filename='audio/background.mp3') }}" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<div class="text-center mt-8 px-4">
+    <!-- Glowing Logo -->
+    <img src="{{ url_for('static', filename='images/20250324_205248.jpg') }}" alt="Sportzino Logo" class="logo-glow mx-auto">
+
+    <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-cyan-400 mb-6">
+        Welcome to Sportzino Freeplay!
+    </h1>
+
+    <div class="referral-form">
+        <form method="POST" action="{{ url_for('freeplay') }}" class="space-y-4">
+            <input
+                type="text"
+                name="referral_code"
+                placeholder="Enter referral code if you have one"
+                class="w-full px-4 py-3 rounded-lg border border-cyan-400 bg-gray-900 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+            <button
+                type="submit"
+                class="w-full py-3 bg-cyan-400 hover:bg-cyan-300 text-black font-semibold rounded-lg transition duration-300"
+            >
+                Generate My Referral Code
+            </button>
+        </form>
+
+        {% if code %}
+        <div class="code-box">
+            Your referral code: <span>{{ code }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <p class="text-gray-400 text-sm mt-4">No referral code? Just leave it blank and start playing!</p>
+</div>
+{% endblock %}
