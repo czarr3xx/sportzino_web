@@ -23,72 +23,27 @@
         </p>
       </header>
 
-      <!-- Authenticated User Info -->
       {% if current_user.is_authenticated %}
       <section class="bg-gray-800 p-4 rounded-lg shadow mb-6 text-sm">
-        <p>
-          <span class="text-yellow-400 font-semibold">💰 Balance:</span>
-          ${{ balance }}
-        </p>
-        <p>
-          <span class="text-green-400 font-semibold">👥 Referrals:</span>
-          {{ referrals }} people ➜ ${{ referral_earnings }} earned
-        </p>
-        <p>
-          <span class="text-blue-400 font-semibold">🎮 Freeplay Credits:</span>
-          ${{ freeplay_credits }}
-        </p>
+        <p><span class="text-yellow-400 font-semibold">💰 Balance:</span> ${{ balance }}</p>
+        <p><span class="text-green-400 font-semibold">👥 Referrals:</span> {{ referrals }} people ➜ ${{ referral_earnings }} earned</p>
+        <p><span class="text-blue-400 font-semibold">🎮 Freeplay Credits:</span> ${{ freeplay_credits }}</p>
       </section>
       {% endif %}
 
-      <!-- Referral Form -->
       <section class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-4 mb-6">
         <form method="POST" action="{{ url_for('submit') }}" enctype="multipart/form-data">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            required
-            class="w-full px-4 py-3 rounded bg-gray-900 border border-gray-700 text-white focus:ring-2 focus:ring-yellow-400"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            required
-            class="w-full px-4 py-3 rounded bg-gray-900 border border-gray-700 text-white focus:ring-2 focus:ring-yellow-400"
-          />
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            class="w-full text-gray-300"
-          />
-          <button
-            type="submit"
-            class="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded shadow-md transition"
-          >
-            Get My Referral Code
-          </button>
+          <input type="text" name="name" placeholder="Full Name" required class="w-full px-4 py-3 rounded bg-gray-900 border border-gray-700 text-white focus:ring-2 focus:ring-yellow-400" />
+          <input type="email" name="email" placeholder="Email Address" required class="w-full px-4 py-3 rounded bg-gray-900 border border-gray-700 text-white focus:ring-2 focus:ring-yellow-400" />
+          <input type="file" name="image" accept="image/*" class="w-full text-gray-300" />
+          <button type="submit" class="w-full py-3 bg-yellow-400 hover:bg-yellow-500 text-black font-bold rounded shadow-md transition">Get My Referral Code</button>
         </form>
       </section>
 
-      <!-- Referral Link Copy Section -->
       {% if referral_link %}
       <section class="text-center mb-10">
-        <input
-          type="text"
-          id="referralLink"
-          value="{{ referral_link }}"
-          readonly
-          class="text-black px-4 py-2 rounded bg-gray-300 w-2/3 mb-2"
-        />
-        <button
-          onclick="copyReferral()"
-          class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-semibold shadow"
-        >
-          Copy Referral Link
-        </button>
+        <input type="text" id="referralLink" value="{{ referral_link }}" readonly class="text-black px-4 py-2 rounded bg-gray-300 w-2/3 mb-2" />
+        <button onclick="copyReferral()" class="bg-yellow-400 hover:bg-yellow-500 text-black px-4 py-2 rounded font-semibold shadow">Copy Referral Link</button>
       </section>
       {% endif %}
 
@@ -98,111 +53,30 @@
         <ol class="list-decimal list-inside space-y-2">
           {% for person in leaderboard %}
           <li class="flex items-center gap-2">
-            <img
-              src="{{ url_for('static', filename='flags/' + person.country + '.svg') }}"
-              alt="Flag of {{ person.country }}"
-              class="w-5 h-5"
-            />
-            <span class="text-white font-semibold">{{ person.name }}</span> – 
-            ${{ person.amount }} earned
+            <img src="{{ url_for('static', filename='flags/' + person.country + '.svg') }}" alt="Flag of {{ person.country }}" class="w-5 h-5" />
+            <span class="text-white font-semibold">{{ person.name }}</span> – ${{ person.amount }} earned
           </li>
           {% endfor %}
         </ol>
       </section>
 
-      <!-- Crypto Donation Section -->
-      <section class="bg-gray-900 rounded-xl shadow p-6 mb-10">
-        <h2 class="text-xl font-bold text-yellow-300 mb-4">💸 Support with Crypto</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-300">
-          <div class="text-center">
-            <h3 class="font-semibold text-yellow-400 mb-2">Bitcoin (BTC)</h3>
-            <img
-              src="{{ url_for('static', filename='images/btc_qr.png') }}"
-              alt="BTC QR Code"
-              class="mx-auto w-32 h-32"
-            />
-            <p class="break-all mt-2">15HfktH6MgXoXrJ5GDxdnqJSPZj9Cw63gs</p>
-          </div>
-          <div class="text-center">
-            <h3 class="font-semibold text-yellow-400 mb-2">Solana (SOL)</h3>
-            <img
-              src="{{ url_for('static', filename='images/sol_qr.png') }}"
-              alt="SOL QR Code"
-              class="mx-auto w-32 h-32"
-            />
-            <p class="break-all mt-2">
-              GGB2reUT34H2LY5DYuPFhe5CT9ZRHCFBepHfC1zBGKi5
-            </p>
-          </div>
-          <div class="text-center">
-            <h3 class="font-semibold text-yellow-400 mb-2">Ethereum (ETH)</h3>
-            <img
-              src="{{ url_for('static', filename='images/eth_qr.png') }}"
-              alt="ETH QR Code"
-              class="mx-auto w-32 h-32"
-            />
-            <p class="break-all mt-2">
-              0x8a9d45fc29c87685b124d2c246ab56bee8daa825
-            </p>
-          </div>
-        </div>
-      </section>
+      <!-- Social Share Buttons -->
+      <div class="flex justify-center gap-4 mt-6 mb-10">
+        <button onclick="shareLink('whatsapp')" class="bg-green-500 text-white px-4 py-2 rounded-xl shadow">Share on WhatsApp</button>
+        <button onclick="shareLink('x')" class="bg-blue-600 text-white px-4 py-2 rounded-xl shadow">Share on X</button>
+        <button onclick="shareLink('facebook')" class="bg-blue-800 text-white px-4 py-2 rounded-xl shadow">Share on Facebook</button>
+        <button onclick="shareLink('telegram')" class="bg-cyan-600 text-white px-4 py-2 rounded-xl shadow">Share on Telegram</button>
+      </div>
 
-      <!-- Cash App Paper Money Instructions -->
-      <section class="bg-gray-900 rounded-xl shadow p-6 mb-10 text-center">
-        <h2 class="text-xl font-bold text-yellow-300 mb-4">
-          💵 Deposit Paper Money via Cash App
-        </h2>
-        <p class="text-gray-300 mb-4">
-          To deposit cash into our Cash App account, follow these steps:
-        </p>
-        <ol class="text-left text-gray-300 list-decimal list-inside mb-4">
-          <li>Open the Cash App on your mobile device.</li>
-          <li>Tap the <strong>Banking</strong> tab on the home screen.</li>
-          <li>Select <strong>Paper Money</strong>.</li>
-          <li>
-            Use the map to find a nearby participating retailer (e.g., 7-Eleven,
-            Walgreens, Walmart, CVS).
-          </li>
-          <li>
-            Tap <strong>Show Barcode</strong> to generate your unique deposit
-            barcode.
-          </li>
-          <li>
-            Visit the selected store and inform the cashier that you'd like to
-            deposit cash into your Cash App account.
-          </li>
-          <li>
-            Present the barcode for scanning and hand over the cash amount you
-            wish to deposit.
-          </li>
-          <li>
-            Confirm the transaction and keep the receipt provided by the
-            cashier.
-          </li>
-        </ol>
-        <p class="text-gray-300 mb-4">Please note:</p>
-        <ul class="text-left text-gray-300 list-disc list-inside">
-          <li>Minimum deposit: $5</li>
-          <li>Maximum per deposit: $500</li>
-          <li>Weekly limit: $1,000</li>
-          <li>Monthly limit: $4,000</li>
-          <li>A $1 fee may apply per deposit transaction.</li>
-        </ul>
-        <p class="text-gray-300 mt-4">
-          For more information, visit the
-          <a
-            href="https://cash.app/help/6488-paper-money-deposit"
-            class="text-yellow-400 underline"
-            target="_blank"
-          >
-            Cash App Help Center
-          </a>
-          .
-        </p>
-      </section>
+      <!-- Background Music -->
+      <audio id="bg-music" loop autoplay>
+        <source src="https://www.bensound.com/bensound-music/bensound-sunny.mp3" type="audio/mpeg" />
+        Your browser does not support the audio element.
+      </audio>
 
-      <!-- Footer -->
+      <!-- Crypto Donations and Cash App Instructions (unchanged) -->
+      <!-- [KEEP THE REMAINDER OF YOUR TEMPLATE HERE, INCLUDING DONATION SECTIONS, FOOTER, ETC.] -->
+
       <footer class="mt-8 text-sm text-gray-500 text-center">
         Powered by <span class="text-yellow-400 font-semibold">Sportzino</span>
       </footer>
@@ -217,10 +91,31 @@
         document.execCommand("copy");
         alert("Copied: " + copyText.value);
 
-        // Button feedback
         const btn = document.querySelector("button[onclick='copyReferral()']");
         btn.textContent = "Link Copied!";
         setTimeout(() => (btn.textContent = "Copy Referral Link"), 2000);
+      }
+
+      function shareLink(platform) {
+        const link = document.getElementById("referralLink")?.value || window.location.href;
+        let shareURL = "";
+
+        switch (platform) {
+          case "whatsapp":
+            shareURL = `https://wa.me/?text=${encodeURIComponent(link)}`;
+            break;
+          case "x":
+            shareURL = `https://twitter.com/intent/tweet?url=${encodeURIComponent(link)}`;
+            break;
+          case "facebook":
+            shareURL = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+            break;
+          case "telegram":
+            shareURL = `https://t.me/share/url?url=${encodeURIComponent(link)}`;
+            break;
+        }
+
+        window.open(shareURL, "_blank");
       }
     </script>
   </body>

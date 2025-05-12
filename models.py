@@ -1,49 +1,56 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
-from datetime import datetime
+import string
+import random
+from flask import Flask, request, redirect, url_for, render_template, flash
+from werkzeug.security import generate_password_hash
+from models import db, User
+from flask_login import LoginManager
 
-# Initialize the database
-db = SQLAlchemy()
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'  # Make sure to replace with a secure one in production
 
-# User Model for Authentication and Financial Tracking
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+login_manager = LoginManager(app)
 
-    # Financial fields
-    balance = db.Column(db.Float, default=0.0)
-    referral_code = db.Column(db.String(100), unique=True, nullable=False)
-    referred_by = db.Column(db.String(100), nullable=True)
-    earnings = db.Column(db.Float, default=0.0)
-    joined_on = db.Column(db.DateTime, default=datetime.utcnow)
+# Generate an 8-character referral code
+def generate_referral_code():
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
 
-    # Relationship to Transactions
-    transactions = db.relationship('Transaction', backref='user', lazy=True)
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-# Referral Model
-class Referral(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    full_name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    referral_code = db.Column(db.String(100), unique=True, nullable=False)
-    image_filename = db.Column(db.String(200), nullable=True)
-    referrer_id = db.Column(db.Integer, nullable=True)
+@app.route('/register', methods=['POST'])
+def register():
+    full_name = request.form['full_name']
+    email = request.form['email']
+    password = request.form['password']
+    referred_by = request.form.get('referral_code')
 
-# Transaction Model for tracking financial actions
-class Transaction(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    amount = db.Column(db.Float)
-    type = db.Column(db.String(50))  # e.g., deposit, freeplay, bonus
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    # Check if the user already exists
+    if User.query.filter_by(email=email).first():
+        flash('Email already registered. Please log in or use a different email.')
+        return redirect(url_for('index'))
 
-# Manual Payment Model
-class ManualPayment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    method = db.Column(db.String(20), nullable=False)
-    screenshot_filename = db.Column(db.String(200), nullable=False)
-    verified = db.Column(db.Boolean, default=False)
+    # Create hashed password
+    hashed_password = generate_password_hash(password)
+
+    # Create new user
+    new_user = User(
+        full_name=full_name,
+        email=email,
+        password=hashed_password,
+        referral_code=generate_referral_code(),
+        referred_by=referred_by
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    # Reward the referrer
+    if referred_by:
+        referrer = User.query.filter_by(referral_code=referred_by).first()
+        if referrer:
+            referrer.earnings += 82.0  # or whatever amount
+            db.session.commit()
+
+    flash('Registration successful!')
+    return redirect(url_for('index'))
