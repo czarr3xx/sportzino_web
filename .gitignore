@@ -1,5 +1,12 @@
-venv/
 __pycache__/
 *.pyc
-*.db
+*.pyo
+*.pyd
 .env
+venv/
+.env/
+*.db
+node_modules/
+build/
+dist/
+.DS_Store
