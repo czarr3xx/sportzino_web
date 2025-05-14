@@ -10,6 +10,7 @@ from io import StringIO
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from waitress import serve
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -19,7 +20,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///referrals.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-CORS(app)  # Enable CORS
+CORS(app)
 
 # Stripe & PayPal Config
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
@@ -42,14 +43,12 @@ class User(db.Model, UserMixin):
     referral_code = db.Column(db.String(50), unique=True)
     referrer_code = db.Column(db.String(50))
     balance = db.Column(db.Float, default=0.0)
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())  # Added for timestamp
+    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def set_password(self, password):
-        """Hashes the user's password."""
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
-        """Checks if the provided password matches the hashed password."""
         return check_password_hash(self.password, password)
 
 class KYCSubmission(db.Model):
@@ -62,6 +61,13 @@ class KYCSubmission(db.Model):
     id_file = db.Column(db.String(255))
     date = db.Column(db.String(100))
 
+class FreeplayEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    referral_code = db.Column(db.String(50))
+    reward = db.Column(db.Float)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -71,20 +77,46 @@ def load_user(user_id):
 def home():
     return render_template('index.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('freeplay'))
+        return render_template('login.html', error="Invalid credentials")
     return render_template('login.html')
 
-@app.route('/register')
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        if User.query.filter_by(email=email).first():
+            return render_template('register.html', error="Email already registered.")
+        user = User(email=email)
+        user.set_password(password)
+        user.referral_code = email.split('@')[0] + str(datetime.utcnow().timestamp()).replace('.', '')
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('freeplay'))
     return render_template('register.html')
 
 @app.route('/freeplay')
 @login_required
 def freeplay():
-    return render_template('freeplay.html')
+    return render_template('freeplay.html', background_music_url=url_for('static', filename='music/bg.mp3'))
 
-# Public API Routes
+# API Routes
 @app.route('/api/user-info', methods=['GET'])
 @login_required
 def user_info():
@@ -95,27 +127,38 @@ def user_info():
 
 @app.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
-    data = [
-        {"country": "US", "name": "Micheal Sawyer", "amount": 120.50},
-        {"country": "US", "name": "Jane Smith", "amount": 100.25},
+    entries = FreeplayEntry.query.order_by(FreeplayEntry.reward.desc()).limit(10).all()
+    leaderboard = [
+        {
+            "user_id": e.user_id,
+            "referral_code": e.referral_code,
+            "amount": e.reward,
+            "timestamp": e.timestamp.strftime('%Y-%m-%d %H:%M')
+        } for e in entries
     ]
-    return jsonify({"leaderboard": data})
+    return jsonify({"leaderboard": leaderboard})
 
 @app.route('/api/freeplay', methods=['POST'])
+@login_required
 def freeplay_api():
     data = request.get_json() or {}
     code = data.get('referral_code')
     if not code:
         return jsonify({"error": "Please enter a referral code"}), 400
-    return jsonify({"message": f"Received referral code: {code}"}), 200
+
+    reward = 10.0
+    entry = FreeplayEntry(user_id=current_user.id, referral_code=code, reward=reward)
+    db.session.add(entry)
+
+    current_user.balance += reward
+    db.session.commit()
+    return jsonify({"message": "Referral recorded. $10 reward added."}), 200
 
 @app.route('/api/submit', methods=['POST'])
 def submit():
-    data = request.get_json() or {}  # extract fields
-    # save to db if needed
+    data = request.get_json() or {}
     return jsonify({"message": "Form submitted successfully"}), 200
 
-# Admin API Routes
 @app.route('/api/admin-dashboard', methods=['GET'])
 @login_required
 def admin_dashboard():
@@ -157,11 +200,11 @@ def download_kyc_csv():
     resp.headers['Content-Disposition'] = 'attachment; filename=submissions.csv'
     return resp
 
-# Payment API Routes
+# Payment Routes
 @app.route('/api/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     try:
-        sess = stripe.checkout.Session.create(
+        checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
                 'price_data': {
@@ -172,10 +215,10 @@ def create_checkout_session():
                 'quantity': 1
             }],
             mode='payment',
-            success_url='https://sportzino.com/success',  # Ensure proper URL for success
-            cancel_url='https://sportzino.com/cancel'   # Ensure proper URL for cancel
+            success_url='https://sportzino.com/success',
+            cancel_url='https://sportzino.com/cancel'
         )
-        return jsonify({"url": sess.url}), 200
+        return jsonify({"url": checkout_session.url}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -192,7 +235,7 @@ def paypal_pay():
 def chime_pay():
     return jsonify({"message": "Transfer manually to Chime Bank."}), 200
 
-# Error Handlers
+# Errors
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('404.html'), 404
@@ -201,11 +244,11 @@ def page_not_found(error):
 def internal_server_error(error):
     return render_template('500.html'), 500
 
-# Run the app using Waitress or Flask's built-in server based on the environment
+# Run App
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # Create database tables (For production, use migrations)
+        db.create_all()
     if os.getenv('FLASK_ENV') == 'production':
-        serve(app, host='0.0.0.0', port=5000)  # Run with Waitress for production
+        serve(app, host='0.0.0.0', port=5000)
     else:
-        app.run(debug=True)  # Run with Flask's built-in server for development
+        app.run(debug=True)
