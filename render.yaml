@@ -5,3 +5,4 @@ services:
     buildCommand: ""
     startCommand: "python app.py"
     plan: free
+startCommand: gunicorn backend.app:app
