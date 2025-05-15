@@ -1,12 +1,22 @@
-# Sportzino
+# Sportzino Referral Tracker 🎯
 
-Sportzino is a Flask-based web platform designed for freeplay referral tracking and gamified engagement.
+A Flask-based referral tracking system for Sportzino Freeplay. Built with Python, SQLite, and deployed on Render.
 
-## 🚀 How to Run Locally
+## 🚀 Features
 
-```bash
-# Step 1: Install dependencies
-pip install -r requirements.txt
+- User referral tracking system
+- Referral link sharing
+- Reward logic integration (Freeplay bonus, etc.)
+- Render deployment-ready
+- Clean, modern web design (Sportzino-inspired)
 
-# Step 2: Run the Flask app
-python app.py
+## 🛠 Tech Stack
+
+- Python 3.11+
+- Flask
+- SQLite
+- Gunicorn / Waitress (for production)
+- HTML/CSS/JavaScript
+
+## 📁 Project Structure
+

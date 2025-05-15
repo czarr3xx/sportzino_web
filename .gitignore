@@ -10,3 +10,5 @@ node_modules/
 build/
 dist/
 .DS_Store
+instance/
+*.sqlite3
