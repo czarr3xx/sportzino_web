@@ -18,7 +18,7 @@ load_dotenv()
 # Flask App Config
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'default_secret_key')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///referrals.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URI', 'sqlite:///referrals.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 CORS(app)
 
@@ -72,7 +72,7 @@ class FreeplayEntry(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Routes for rendering templates
+# Routes
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -104,7 +104,7 @@ def register():
             return render_template('register.html', error="Email already registered.")
         user = User(email=email)
         user.set_password(password)
-        user.referral_code = email.split('@')[0] + str(datetime.utcnow().timestamp()).replace('.', '')
+        user.referral_code = email.split('@')[0] + str(int(datetime.utcnow().timestamp()))
         db.session.add(user)
         db.session.commit()
         login_user(user)
@@ -117,7 +117,7 @@ def freeplay():
     return render_template('freeplay.html', background_music_url=url_for('static', filename='music/bg.mp3'))
 
 # API Routes
-@app.route('/api/user-info', methods=['GET'])
+@app.route('/api/user-info')
 @login_required
 def user_info():
     return jsonify({
@@ -125,7 +125,7 @@ def user_info():
         "referral_link": f"https://example.com/referral/{current_user.referral_code}"
     })
 
-@app.route('/api/leaderboard', methods=['GET'])
+@app.route('/api/leaderboard')
 def get_leaderboard():
     entries = FreeplayEntry.query.order_by(FreeplayEntry.reward.desc()).limit(10).all()
     leaderboard = [
@@ -145,11 +145,9 @@ def freeplay_api():
     code = data.get('referral_code')
     if not code:
         return jsonify({"error": "Please enter a referral code"}), 400
-
     reward = 10.0
     entry = FreeplayEntry(user_id=current_user.id, referral_code=code, reward=reward)
     db.session.add(entry)
-
     current_user.balance += reward
     db.session.commit()
     return jsonify({"message": "Referral recorded. $10 reward added."}), 200
@@ -159,7 +157,7 @@ def submit():
     data = request.get_json() or {}
     return jsonify({"message": "Form submitted successfully"}), 200
 
-@app.route('/api/admin-dashboard', methods=['GET'])
+@app.route('/api/admin-dashboard')
 @login_required
 def admin_dashboard():
     if current_user.email != os.getenv('ADMIN_EMAIL'):
@@ -185,7 +183,7 @@ def admin_dashboard():
         } for u in users]
     })
 
-@app.route('/api/download-kyc-csv', methods=['GET'])
+@app.route('/api/download-kyc-csv')
 @login_required
 def download_kyc_csv():
     if current_user.email != os.getenv('ADMIN_EMAIL'):
@@ -200,7 +198,7 @@ def download_kyc_csv():
     resp.headers['Content-Disposition'] = 'attachment; filename=submissions.csv'
     return resp
 
-# Payment Routes
+# Stripe & PayPal
 @app.route('/api/create-checkout-session', methods=['POST'])
 def create_checkout_session():
     try:
@@ -210,13 +208,13 @@ def create_checkout_session():
                 'price_data': {
                     'currency': 'usd',
                     'product_data': {'name': 'Sportzino Membership'},
-                    'unit_amount': 1000
+                    'unit_amount': 1000,
                 },
-                'quantity': 1
+                'quantity': 1,
             }],
             mode='payment',
             success_url='https://sportzino.com/success',
-            cancel_url='https://sportzino.com/cancel'
+            cancel_url='https://sportzino.com/cancel',
         )
         return jsonify({"url": checkout_session.url}), 200
     except Exception as e:
@@ -235,7 +233,7 @@ def paypal_pay():
 def chime_pay():
     return jsonify({"message": "Transfer manually to Chime Bank."}), 200
 
-# Errors
+# Error Handlers
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('404.html'), 404

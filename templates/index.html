@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sportzino Freeplay</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <!-- Background Music -->
+  <audio id="bg-music" autoplay loop playsinline>
+    <source src="https://www.bensound.com/bensound-music/bensound-sunny.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Container -->
+  <div class="max-w-4xl mx-auto p-6">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <img src="{{ url_for('static', filename='sportzino-logo.png') }}" alt="Sportzino Logo" class="w-24 mx-auto mb-4" />
+      <h1 class="text-3xl font-bold text-indigo-700">Welcome to Sportzino Freeplay!</h1>
+      <p class="text-sm text-gray-600 mt-2">Earn free crypto by referring friends!</p>
+    </div>
+
+    <!-- User Info -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Your Stats</h2>
+      <ul class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+        <li class="p-4 border rounded">
+          <div class="text-sm text-gray-500">Balance</div>
+          <div class="text-lg font-bold text-green-600">${{ balance }}</div>
+        </li>
+        <li class="p-4 border rounded">
+          <div class="text-sm text-gray-500">Referrals</div>
+          <div class="text-lg font-bold">{{ referrals }}</div>
+        </li>
+        <li class="p-4 border rounded">
+          <div class="text-sm text-gray-500">Freeplay</div>
+          <div class="text-lg font-bold text-purple-600">{{ freeplay }}</div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Referral Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">Enter Your Info</h2>
+      <form action="{{ url_for('submit') }}" method="post" class="grid gap-4">
+        <input type="text" name="name" placeholder="Your Name" class="border p-2 rounded w-full" required />
+        <input type="email" name="email" placeholder="Your Email" class="border p-2 rounded w-full" required />
+        <input type="url" name="pic" placeholder="Profile Picture URL" class="border p-2 rounded w-full" required />
+        <button type="submit" class="bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">Submit</button>
+      </form>
+    </div>
+
+    <!-- Referral Link -->
+    {% if referral_link %}
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8 text-center">
+      <h2 class="text-xl font-semibold text-gray-800 mb-2">Your Referral Link</h2>
+      <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
+        <input id="referralLink" type="text" value="{{ referral_link }}" readonly class="border p-2 rounded w-full sm:w-2/3 text-center" />
+        <button onclick="copyReferral()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">Copy Referral Link</button>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Leaderboard -->
+    {% if leaderboard %}
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4 text-center">🏆 Leaderboard</h2>
+      <ul class="divide-y">
+        {% for person in leaderboard %}
+        <li class="flex items-center justify-between py-2">
+          <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='flags/' + person.country + '.svg') }}" alt="{{ person.country }}" class="w-6 h-6" onerror="this.src='{{ url_for('static', filename='flags/default.svg') }}'" />
+            <span class="font-medium">{{ person.name }}</span>
+          </div>
+          <div class="text-green-600 font-bold">${{ person.amount }}</div>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- Share Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 text-center">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4">📤 Share with Friends</h2>
+      <div class="flex justify-center gap-4 flex-wrap">
+        {% set link = referral_link %}
+        <a href="https://wa.me/?text={{ link }}" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition">WhatsApp</a>
+        <a href="https://x.com/intent/tweet?text={{ link }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">X (Twitter)</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ link }}" class="bg-indigo-700 text-white px-4 py-2 rounded hover:bg-indigo-800 transition">Facebook</a>
+        <a href="https://t.me/share/url?url={{ link }}" class="bg-blue-400 text-white px-4 py-2 rounded hover:bg-blue-500 transition">Telegram</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function copyReferral() {
+      const copyText = document.getElementById("referralLink");
+      navigator.clipboard.writeText(copyText.value).then(() => {
+        const btn = document.querySelector("button[onclick='copyReferral()']");
+        btn.textContent = "Link Copied!";
+        setTimeout(() => (btn.textContent = "Copy Referral Link"), 2000);
+      });
+    }
+  </script>
+</body>
+</html>
